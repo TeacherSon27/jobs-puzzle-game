@@ -1,0 +1,2233 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Jobs Puzzle Game</title>
+  <style>
+    :root {
+      --gold: #f3b71b;
+      --gold-bright: #ffe36f;
+      --gold-dark: #9c6100;
+      --ink: #1f1500;
+      --panel: rgba(90, 54, 0, 0.34);
+      --line: rgba(255, 236, 143, 0.72);
+      --white: #f7f7f2;
+      --aqua: #63e4f0;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #020306;
+      color: var(--white);
+      font-family: Arial, Helvetica, sans-serif;
+      letter-spacing: 0;
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    body {
+      position: fixed;
+      inset: 0;
+    }
+
+    button {
+      font: inherit;
+      letter-spacing: 0;
+      touch-action: manipulation;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .game-dashboard {
+      position: relative;
+      display: grid;
+      grid-template-rows: 178px minmax(0, 1fr);
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 16% 12%, rgba(255, 248, 182, 0.62), transparent 26%),
+        radial-gradient(circle at 82% 18%, rgba(255, 192, 35, 0.44), transparent 30%),
+        radial-gradient(circle at 50% 100%, rgba(119, 72, 0, 0.76), transparent 42%),
+        linear-gradient(135deg, rgba(78, 45, 0, 0.9), rgba(255, 199, 50, 0.42) 44%, rgba(62, 37, 0, 0.94)),
+        url("assets/ui/background-texture.png");
+      background-size: cover;
+    }
+
+    .game-dashboard::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        linear-gradient(115deg, rgba(255, 255, 255, 0.34), transparent 24%, transparent 72%, rgba(255, 255, 255, 0.2)),
+        linear-gradient(180deg, rgba(255, 242, 166, 0.34), transparent 28%, transparent 80%, rgba(139, 79, 0, 0.28));
+      mix-blend-mode: screen;
+    }
+
+    .topbar {
+      position: relative;
+      z-index: 7;
+    }
+
+    .password-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 20;
+      display: grid;
+      place-items: center;
+      background:
+        radial-gradient(circle at 50% 34%, rgba(255, 241, 151, 0.58), transparent 34%),
+        linear-gradient(145deg, rgba(62, 38, 0, 0.92), rgba(180, 114, 0, 0.78), rgba(27, 17, 0, 0.96)),
+        url("assets/ui/background-texture.png");
+      background-size: cover;
+    }
+
+    .password-overlay.hidden {
+      display: none;
+    }
+
+    .password-card {
+      width: min(480px, 84vw);
+      padding: 28px;
+      border: 1px solid rgba(255, 247, 184, 0.86);
+      border-radius: 8px;
+      background:
+        linear-gradient(145deg, rgba(255, 246, 176, 0.24), rgba(117, 69, 0, 0.56)),
+        rgba(34, 22, 0, 0.72);
+      backdrop-filter: blur(14px) saturate(1.25);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.42),
+        0 0 34px rgba(255, 214, 68, 0.48),
+        0 24px 60px rgba(0, 0, 0, 0.66);
+    }
+
+    .password-label {
+      display: block;
+      margin-bottom: 14px;
+      color: var(--gold-bright);
+      font-size: 28px;
+      font-weight: 900;
+      line-height: 1;
+      text-align: center;
+      text-shadow: 0 0 14px rgba(255, 217, 72, 0.55);
+    }
+
+    .password-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 132px;
+      gap: 12px;
+    }
+
+    .password-input {
+      min-width: 0;
+      height: 54px;
+      border: 2px solid rgba(255, 232, 118, 0.78);
+      border-radius: 999px;
+      background: rgba(58, 35, 0, 0.52);
+      color: #fffbea;
+      font-size: 24px;
+      font-weight: 900;
+      outline: none;
+      padding: 0 22px;
+      text-align: center;
+    }
+
+    .password-input:focus {
+      box-shadow: 0 0 0 3px rgba(255, 219, 72, 0.24);
+    }
+
+    .password-submit {
+      min-height: 54px;
+    }
+
+    .password-error {
+      min-height: 20px;
+      margin-top: 12px;
+      color: #ff736f;
+      font-size: 14px;
+      font-weight: 900;
+      text-align: center;
+    }
+
+    .control-bar {
+      position: absolute;
+      top: 15px;
+      left: 18px;
+      display: grid;
+      grid-template-columns: 112px 142px 112px;
+      grid-template-rows: 54px 54px;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .gold-button {
+      min-height: 52px;
+      padding: 0 18px;
+      border: 2px solid #fff1a4;
+      border-radius: 999px;
+      background:
+        linear-gradient(180deg, #fff08c 0%, var(--gold) 50%, #d78b00 100%);
+      color: #1c1300;
+      font-size: 17px;
+      font-weight: 900;
+      text-shadow: 0 1px 0 rgba(255, 255, 255, 0.45);
+      box-shadow:
+        0 5px 0 var(--gold-dark),
+        0 12px 22px rgba(0, 0, 0, 0.42),
+        inset 0 1px 0 rgba(255, 255, 255, 0.82);
+      cursor: pointer;
+    }
+
+    .gold-button:active {
+      transform: translateY(3px);
+      box-shadow:
+        0 2px 0 var(--gold-dark),
+        0 8px 16px rgba(0, 0, 0, 0.38),
+        inset 0 1px 0 rgba(255, 255, 255, 0.76);
+    }
+
+    .gold-button:disabled {
+      opacity: 0.55;
+      cursor: default;
+      transform: none;
+      box-shadow:
+        0 3px 0 var(--gold-dark),
+        0 8px 16px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    }
+
+    #startBtn {
+      grid-column: 1;
+      grid-row: 1;
+    }
+
+    #endBtn {
+      grid-column: 2;
+      grid-row: 1;
+    }
+
+    #resetBtn {
+      grid-column: 3;
+      grid-row: 1;
+    }
+
+    #pauseBtn {
+      grid-column: 3;
+      grid-row: 2;
+    }
+
+    .mode-controls {
+      grid-column: 1;
+      grid-row: 2;
+      grid-column-end: 3;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .fullscreen-button {
+      width: 62px;
+      min-width: 62px;
+      min-height: 52px;
+      display: grid;
+      place-items: center;
+      padding: 0;
+    }
+
+    .fullscreen-button svg {
+      width: 26px;
+      height: 26px;
+      stroke: #211500;
+      stroke-width: 3;
+      fill: none;
+    }
+
+    .player-mode-button {
+      min-width: 142px;
+      min-height: 52px;
+      padding: 0 16px;
+      font-size: 15px;
+      white-space: nowrap;
+    }
+
+    .timer-shell {
+      position: absolute;
+      top: 8px;
+      left: 50%;
+      width: 400px;
+      aspect-ratio: 1260 / 533;
+      transform: translateX(-50%);
+      filter: drop-shadow(0 14px 22px rgba(0, 0, 0, 0.58));
+    }
+
+    .timer-shell img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      pointer-events: none;
+    }
+
+    .timer-readout {
+      position: absolute;
+      left: 8%;
+      right: 8%;
+      top: 31%;
+      bottom: 16%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding-top: 9px;
+      color: #e9fffb;
+      font-size: 50px;
+      font-weight: 900;
+      line-height: 1;
+      text-shadow:
+        0 0 12px rgba(129, 241, 237, 0.8),
+        0 2px 0 #000;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .players {
+      position: relative;
+      z-index: 2;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 14px;
+      min-height: 0;
+      padding: 0 16px 16px;
+      transition:
+        grid-template-columns 220ms ease,
+        gap 220ms ease,
+        padding 220ms ease;
+    }
+
+    .game-dashboard.one-player .players {
+      grid-template-columns: minmax(0, 1fr);
+      padding: 0 32px 16px;
+    }
+
+    .game-dashboard.one-player #playerTwo {
+      display: none;
+    }
+
+    .player-panel {
+      position: relative;
+      display: grid;
+      grid-template-rows: 104px minmax(0, 1fr) 78px;
+      min-width: 0;
+      min-height: 0;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background:
+        linear-gradient(145deg, rgba(255, 246, 177, 0.24), rgba(175, 108, 0, 0.18) 48%, rgba(58, 35, 0, 0.46)),
+        url("assets/ui/background-texture.png"),
+        var(--panel);
+      background-size: cover;
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.34),
+        inset 0 0 48px rgba(255, 226, 104, 0.2),
+        0 18px 40px rgba(62, 35, 0, 0.42);
+      backdrop-filter: blur(10px) saturate(1.22);
+      touch-action: none;
+      transition:
+        opacity 180ms ease,
+        transform 180ms ease;
+    }
+
+    .player-panel::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        linear-gradient(110deg, rgba(255, 255, 255, 0.2), transparent 20%, transparent 76%, rgba(255, 255, 255, 0.14)),
+        linear-gradient(180deg, rgba(255, 236, 138, 0.16), transparent 28%);
+    }
+
+    .player-top {
+      position: relative;
+      z-index: 2;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      grid-template-rows: 30px 24px 22px;
+      gap: 8px 14px;
+      min-width: 0;
+      padding: 12px 18px 0;
+    }
+
+    .player-id {
+      min-width: 0;
+      color: rgba(255, 255, 255, 0.86);
+      font-size: 20px;
+      font-weight: 900;
+      line-height: 1;
+      white-space: nowrap;
+    }
+
+    .job-label {
+      min-width: 0;
+      color: var(--gold-bright);
+      font-size: 21px;
+      font-weight: 900;
+      line-height: 1;
+      overflow: hidden;
+      text-align: right;
+      text-overflow: ellipsis;
+      text-shadow: 0 0 12px rgba(255, 204, 58, 0.5);
+      white-space: nowrap;
+    }
+
+    .section-label,
+    .score-label {
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 15px;
+      font-weight: 900;
+      line-height: 1;
+      white-space: nowrap;
+    }
+
+    .score-label {
+      text-align: right;
+    }
+
+    .progress-wrap {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: 74px minmax(0, 1fr) 52px;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .progress-title,
+    .progress-value {
+      color: rgba(255, 255, 255, 0.82);
+      font-size: 14px;
+      font-weight: 900;
+      line-height: 1;
+      white-space: nowrap;
+    }
+
+    .progress-value {
+      color: var(--gold-bright);
+      text-align: right;
+    }
+
+    .progress-track {
+      position: relative;
+      height: 13px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 226, 138, 0.48);
+      border-radius: 999px;
+      background: rgba(0, 0, 0, 0.48);
+      box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.55);
+    }
+
+    .progress-fill {
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 0%;
+      border-radius: inherit;
+      background:
+        linear-gradient(90deg, #f4b91f 0%, #fff07d 52%, #5be8f2 100%);
+      box-shadow: 0 0 14px rgba(255, 221, 83, 0.55);
+      transition: width 180ms ease;
+    }
+
+    .puzzle-zone {
+      position: relative;
+      z-index: 1;
+      min-height: 0;
+      padding: 6px 16px 4px;
+      overflow: visible;
+    }
+
+    .board-frame {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+      border: 0;
+      border-radius: 0;
+      background:
+        radial-gradient(circle at 50% 50%, rgba(255, 246, 173, 0.2), transparent 62%),
+        linear-gradient(145deg, rgba(255, 228, 110, 0.18), rgba(69, 42, 0, 0.24));
+      box-shadow:
+        inset 0 0 38px rgba(255, 238, 129, 0.18),
+        inset 0 0 80px rgba(91, 54, 0, 0.22);
+      touch-action: none;
+    }
+
+    .starfield {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    .guide-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 1;
+      display: block;
+      object-fit: fill;
+      opacity: 0.88;
+      pointer-events: none;
+      transform: translate3d(0, 0, 0);
+      filter:
+        drop-shadow(0 0 8px rgba(255, 224, 70, 0.3))
+        drop-shadow(0 10px 18px rgba(0, 0, 0, 0.46));
+    }
+
+    .answer-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 3;
+      display: block;
+      object-fit: fill;
+      opacity: 0;
+      pointer-events: none;
+      transform: translate3d(0, 0, 0);
+      filter:
+        drop-shadow(0 0 8px rgba(255, 224, 70, 0.3))
+        drop-shadow(0 10px 18px rgba(0, 0, 0, 0.46));
+    }
+
+    .piece-layer {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      overflow: visible;
+    }
+
+    .piece-layer {
+      overflow: visible;
+    }
+
+    .piece {
+      position: absolute;
+      top: 0;
+      left: 0;
+      display: grid;
+      place-items: center;
+      cursor: grab;
+      touch-action: none;
+      transform: translate3d(0, 0, 0);
+      transform-origin: 0 0;
+      transition:
+        transform 145ms cubic-bezier(0.2, 0.9, 0.2, 1),
+        filter 120ms ease;
+      will-change: transform;
+      backface-visibility: hidden;
+      contain: layout style;
+    }
+
+    .piece img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      pointer-events: none;
+      -webkit-user-drag: none;
+      user-drag: none;
+      filter:
+        drop-shadow(0 0 2px rgba(255, 239, 95, 0.96))
+        drop-shadow(0 8px 9px rgba(0, 0, 0, 0.66));
+    }
+
+    .piece.dragging {
+      z-index: 9999;
+      cursor: grabbing;
+      transition: none;
+      filter: drop-shadow(0 0 12px rgba(255, 221, 66, 0.82));
+    }
+
+    .piece.dragging img {
+      width: 100%;
+      height: 100%;
+      filter:
+        drop-shadow(0 0 4px rgba(255, 245, 111, 1))
+        drop-shadow(0 15px 16px rgba(0, 0, 0, 0.74));
+    }
+
+    .player-panel.locked .piece {
+      pointer-events: none;
+      filter: saturate(0.8) brightness(0.76);
+    }
+
+    .player-panel.answer-revealed .piece {
+      pointer-events: none;
+      filter: none;
+    }
+
+    .player-panel.answer-revealed .guide-layer,
+    .player-panel.answer-revealed .piece-layer {
+      opacity: 0;
+      visibility: hidden;
+    }
+
+    .player-panel.answer-revealed .answer-layer {
+      opacity: 1;
+    }
+
+    .action-row {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      padding-bottom: 13px;
+    }
+
+    .check-button,
+    .back-button,
+    .next-button {
+      min-width: 138px;
+      min-height: 58px;
+      padding: 0 24px;
+      border: 2px solid #fff0a6;
+      border-radius: 999px;
+      background:
+        linear-gradient(180deg, #fff093 0%, #ffc937 48%, #dc9200 100%);
+      color: #171000;
+      font-size: 22px;
+      font-weight: 900;
+      box-shadow:
+        0 6px 0 #9a6100,
+        0 12px 22px rgba(0, 0, 0, 0.42),
+        inset 0 1px 0 rgba(255, 255, 255, 0.82);
+      cursor: pointer;
+    }
+
+    .check-button:active,
+    .back-button:active,
+    .next-button:active {
+      transform: translateY(4px);
+      box-shadow:
+        0 2px 0 #9a6100,
+        0 7px 16px rgba(0, 0, 0, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.78);
+    }
+
+    .back-button:disabled {
+      opacity: 0.45;
+      cursor: default;
+      transform: none;
+    }
+
+    .feedback {
+      position: absolute;
+      inset: 0;
+      z-index: 5;
+      display: grid;
+      place-items: center;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .feedback.show {
+      opacity: 1;
+    }
+
+    .feedback img {
+      width: min(34%, 250px);
+      aspect-ratio: 1;
+      object-fit: contain;
+      filter: drop-shadow(0 20px 30px rgba(0, 0, 0, 0.62));
+    }
+
+    .feedback.correct img {
+      animation: correct-pop 950ms ease-out both;
+    }
+
+    .feedback.incorrect img {
+      animation: incorrect-shake 900ms ease-out both;
+    }
+
+    .board-frame.correct {
+      animation: board-correct 900ms ease-out;
+    }
+
+    .board-frame.wrong {
+      animation: board-wrong 620ms ease-out;
+    }
+
+    .winner-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 6;
+      display: grid;
+      place-items: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 180ms ease;
+    }
+
+    .winner-overlay.show {
+      opacity: 1;
+    }
+
+    #celebrationCanvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    .winner-card {
+      position: relative;
+      z-index: 2;
+      width: min(620px, 72vw);
+      padding: 30px 34px;
+      border: 2px solid rgba(255, 229, 104, 0.9);
+      border-radius: 8px;
+      background:
+        linear-gradient(180deg, rgba(16, 20, 27, 0.92), rgba(4, 6, 10, 0.94));
+      box-shadow:
+        0 0 38px rgba(255, 214, 68, 0.42),
+        0 26px 54px rgba(0, 0, 0, 0.62);
+      text-align: center;
+    }
+
+    .winner-title {
+      color: var(--gold-bright);
+      font-size: 54px;
+      font-weight: 900;
+      line-height: 1;
+      text-shadow:
+        0 0 18px rgba(255, 219, 80, 0.72),
+        0 3px 0 #000;
+    }
+
+    .winner-score {
+      margin-top: 18px;
+      color: #eaffff;
+      font-size: 24px;
+      font-weight: 900;
+      line-height: 1.35;
+      text-shadow: 0 0 10px rgba(99, 228, 240, 0.5);
+    }
+
+    @keyframes correct-pop {
+      0% { transform: scale(0.35) rotate(-8deg); opacity: 0; }
+      18% { opacity: 1; }
+      48% { transform: scale(1.08) rotate(4deg); opacity: 1; }
+      100% { transform: scale(0.94) rotate(0deg); opacity: 0; }
+    }
+
+    @keyframes incorrect-shake {
+      0% { transform: scale(0.5); opacity: 0; }
+      15% { opacity: 1; }
+      26% { transform: scale(1.02) translateX(-20px) rotate(-4deg); }
+      42% { transform: scale(1.02) translateX(18px) rotate(4deg); }
+      58% { transform: scale(1.02) translateX(-12px) rotate(-3deg); }
+      74% { transform: scale(0.98) translateX(8px) rotate(2deg); opacity: 1; }
+      100% { transform: scale(0.9) translateX(0) rotate(0deg); opacity: 0; }
+    }
+
+    @keyframes board-correct {
+      0%, 100% { box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.96), 0 0 28px rgba(255, 205, 62, 0.25), 0 18px 36px rgba(0, 0, 0, 0.52); }
+      45% { box-shadow: 0 0 0 4px rgba(255, 222, 90, 0.84), 0 0 48px rgba(255, 222, 90, 0.7), 0 18px 36px rgba(0, 0, 0, 0.52); }
+    }
+
+    @keyframes board-wrong {
+      0%, 100% { transform: translateX(0); }
+      18% { transform: translateX(-10px); }
+      36% { transform: translateX(9px); }
+      54% { transform: translateX(-6px); }
+      72% { transform: translateX(4px); }
+    }
+
+    @media (max-height: 760px) {
+      .game-dashboard {
+        grid-template-rows: 150px minmax(0, 1fr);
+      }
+
+      .control-bar {
+        grid-template-columns: 104px 132px 104px;
+        grid-template-rows: 48px 48px;
+        gap: 8px;
+      }
+
+      .gold-button {
+        min-height: 46px;
+        font-size: 15px;
+      }
+
+      .fullscreen-button {
+        width: 56px;
+        min-width: 56px;
+        min-height: 46px;
+      }
+
+      .player-mode-button {
+        min-height: 46px;
+        font-size: 13px;
+      }
+
+      .timer-shell {
+        width: 346px;
+      }
+
+      .timer-readout {
+        font-size: 43px;
+      }
+
+      .player-panel {
+        grid-template-rows: 96px minmax(0, 1fr) 68px;
+      }
+
+      .player-top {
+        grid-template-rows: 26px 20px 18px;
+        padding-top: 9px;
+      }
+
+      .player-id {
+        font-size: 17px;
+      }
+
+      .job-label {
+        font-size: 18px;
+      }
+
+      .section-label,
+      .score-label {
+        font-size: 13px;
+      }
+
+      .progress-wrap {
+        grid-template-columns: 64px minmax(0, 1fr) 46px;
+        gap: 8px;
+      }
+
+      .progress-title,
+      .progress-value {
+        font-size: 12px;
+      }
+
+      .check-button,
+      .back-button,
+      .next-button {
+        min-width: 118px;
+        min-height: 52px;
+        font-size: 19px;
+      }
+    }
+
+    @media (max-width: 1180px) {
+      .control-bar {
+        left: 12px;
+      }
+
+      .timer-shell {
+        width: 338px;
+      }
+
+      .players {
+        gap: 10px;
+        padding: 0 10px 10px;
+      }
+
+      .game-dashboard.one-player .players {
+        padding: 0 16px 10px;
+      }
+
+      .puzzle-zone {
+        padding-left: 10px;
+        padding-right: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="game-dashboard" id="game">
+    <header class="topbar" aria-label="Game controls">
+      <div class="control-bar">
+        <button class="gold-button" id="startBtn" type="button">START</button>
+        <button class="gold-button" id="endBtn" type="button">END THE GAME</button>
+        <button class="gold-button" id="resetBtn" type="button">RESET</button>
+        <button class="gold-button" id="pauseBtn" type="button" aria-pressed="false" disabled>PAUSE</button>
+        <div class="mode-controls">
+          <button class="gold-button fullscreen-button" id="fullscreenBtn" type="button" aria-label="Fullscreen">
+            <svg viewBox="0 0 32 32" aria-hidden="true">
+              <path d="M5 13V5h8M19 5h8v8M27 19v8h-8M13 27H5v-8"></path>
+            </svg>
+          </button>
+          <button class="gold-button player-mode-button" id="playerModeBtn" type="button" aria-pressed="false">ONE PLAYER</button>
+        </div>
+      </div>
+      <div class="timer-shell" aria-label="Timer">
+        <img src="assets/ui/timer-clock.png" alt="">
+        <div class="timer-readout" id="timerReadout">2:30</div>
+      </div>
+    </header>
+
+    <main class="players" aria-label="Two player puzzle dashboards" id="playersArea">
+      <section class="player-panel" id="playerOne" data-player="1">
+        <div class="player-top">
+          <div class="player-id">PLAYER 1</div>
+          <div class="job-label" data-job-label></div>
+          <div class="section-label" data-section-label></div>
+          <div class="score-label" data-score-label></div>
+          <div class="progress-wrap">
+            <div class="progress-title">PROGRESS</div>
+            <div class="progress-track"><div class="progress-fill" data-progress-fill></div></div>
+            <div class="progress-value" data-progress-value>0%</div>
+          </div>
+        </div>
+        <div class="puzzle-zone">
+          <div class="board-frame" data-board>
+            <canvas class="starfield" data-starfield></canvas>
+            <img class="guide-layer" data-guide alt="">
+            <img class="answer-layer" data-answer alt="">
+            <div class="piece-layer" data-piece-layer></div>
+          </div>
+        </div>
+        <div class="action-row">
+          <button class="check-button" type="button" data-check>CHECK</button>
+          <button class="back-button" type="button" data-back>BACK</button>
+          <button class="next-button" type="button" data-next>NEXT</button>
+        </div>
+        <div class="feedback" data-feedback>
+          <img src="" alt="">
+        </div>
+      </section>
+
+      <section class="player-panel" id="playerTwo" data-player="2">
+        <div class="player-top">
+          <div class="player-id">PLAYER 2</div>
+          <div class="job-label" data-job-label></div>
+          <div class="section-label" data-section-label></div>
+          <div class="score-label" data-score-label></div>
+          <div class="progress-wrap">
+            <div class="progress-title">PROGRESS</div>
+            <div class="progress-track"><div class="progress-fill" data-progress-fill></div></div>
+            <div class="progress-value" data-progress-value>0%</div>
+          </div>
+        </div>
+        <div class="puzzle-zone">
+          <div class="board-frame" data-board>
+            <canvas class="starfield" data-starfield></canvas>
+            <img class="guide-layer" data-guide alt="">
+            <img class="answer-layer" data-answer alt="">
+            <div class="piece-layer" data-piece-layer></div>
+          </div>
+        </div>
+        <div class="action-row">
+          <button class="check-button" type="button" data-check>CHECK</button>
+          <button class="back-button" type="button" data-back>BACK</button>
+          <button class="next-button" type="button" data-next>NEXT</button>
+        </div>
+        <div class="feedback" data-feedback>
+          <img src="" alt="">
+        </div>
+      </section>
+    </main>
+
+    <div class="winner-overlay" id="winnerOverlay" aria-live="polite">
+      <canvas id="celebrationCanvas"></canvas>
+      <div class="winner-card">
+        <div class="winner-title" id="winnerTitle">PLAYER 1 WINS</div>
+        <div class="winner-score" id="winnerScore"></div>
+      </div>
+    </div>
+
+    <div class="password-overlay" id="passwordOverlay" role="dialog" aria-modal="true" aria-label="Password">
+      <form class="password-card" id="passwordForm" autocomplete="off">
+        <label class="password-label" for="passwordInput">PASSWORD</label>
+        <div class="password-row">
+          <input class="password-input" id="passwordInput" type="password" inputmode="text" autocomplete="off">
+          <button class="gold-button password-submit" type="submit">ENTER</button>
+        </div>
+        <div class="password-error" id="passwordError" aria-live="polite"></div>
+      </form>
+    </div>
+  </div>
+
+  <script src="assets/puzzle-pieces/metadata.js"></script>
+  <script>
+    (() => {
+      "use strict";
+
+      const puzzleMetadata = window.PUZZLE_METADATA;
+      const COLS = puzzleMetadata.columns;
+      const ROWS = puzzleMetadata.rows;
+      const PIECE_COUNT = COLS * ROWS;
+      const GAME_SECONDS = 150;
+      const MAX_PANEL_ACTIVE_DRAGS = 4;
+      const MAX_ACTIVE_DRAGS = 8;
+      const PLACEMENT_TOLERANCE = 30;
+      const CHECK_PASS_PERCENT = 60;
+      const STAGE_MARGIN = 8;
+      const DRAG_MARGIN = 6;
+      const CORRECT_LOGO = "assets/ui/correct-logo-transparent.png";
+      const INCORRECT_LOGO = "assets/ui/incorrect-logo-transparent.png";
+      const HAS_POINTER_EVENTS = Boolean(window.PointerEvent);
+      const scheduleFrame = window.requestAnimationFrame
+        ? window.requestAnimationFrame.bind(window)
+        : (callback) => window.setTimeout(() => callback(Date.now()), 16);
+      const cancelFrame = window.cancelAnimationFrame
+        ? window.cancelAnimationFrame.bind(window)
+        : window.clearTimeout.bind(window);
+      const SafeResizeObserver = window.ResizeObserver || class {
+        constructor(callback) {
+          this.callback = callback;
+          this.targets = new Set();
+          this.onResize = () => this.callback([...this.targets].map((target) => ({ target })));
+          window.addEventListener("resize", this.onResize);
+        }
+
+        observe(target) {
+          this.targets.add(target);
+          this.callback([{ target }]);
+        }
+
+        disconnect() {
+          window.removeEventListener("resize", this.onResize);
+          this.targets.clear();
+        }
+      };
+
+      const jobs = ["teacher", "farmer", "firefighter", "chef", "police-officer", "doctor", "taxi-driver", "nurse"]
+        .map((folder) => ({ folder, ...puzzleMetadata.jobs[folder] }));
+
+      const state = {
+        remaining: GAME_SECONDS,
+        started: false,
+        running: false,
+        paused: false,
+        locked: false,
+        sectionExpired: false,
+        gameEnded: false,
+        activeSection: 0,
+        playerMode: "two",
+        timerFrame: 0,
+        endAt: 0,
+        z: 20,
+        celebrating: false,
+        celebrationFrame: 0,
+        dashboardFrame: 0,
+        confetti: [],
+        stars: []
+      };
+
+      const activeDrags = new Map();
+      let lastPointerDownAt = 0;
+      const game = document.getElementById("game");
+      const playersArea = document.getElementById("playersArea");
+      const timerReadout = document.getElementById("timerReadout");
+      const pauseBtn = document.getElementById("pauseBtn");
+      const playerModeBtn = document.getElementById("playerModeBtn");
+      const winnerOverlay = document.getElementById("winnerOverlay");
+      const winnerTitle = document.getElementById("winnerTitle");
+      const winnerScore = document.getElementById("winnerScore");
+      const celebrationCanvas = document.getElementById("celebrationCanvas");
+      const celebrationContext = celebrationCanvas.getContext("2d");
+      const passwordOverlay = document.getElementById("passwordOverlay");
+      const passwordForm = document.getElementById("passwordForm");
+      const passwordInput = document.getElementById("passwordInput");
+      const passwordError = document.getElementById("passwordError");
+
+      const panels = [
+        createPanel(document.getElementById("playerOne"), 0),
+        createPanel(document.getElementById("playerTwo"), 1)
+      ];
+
+      preloadAssets();
+      panels.forEach((panel) => loadSection(panel, 0));
+      initPasswordGate();
+      animateDashboardStars();
+      updateTimerReadout();
+      updatePauseButton();
+      applyPlayerMode(false);
+
+      document.getElementById("startBtn").addEventListener("click", startGame);
+      document.getElementById("endBtn").addEventListener("click", endGame);
+      document.getElementById("resetBtn").addEventListener("click", resetGame);
+      pauseBtn.addEventListener("click", togglePause);
+      playerModeBtn.addEventListener("click", togglePlayerMode);
+      document.getElementById("fullscreenBtn").addEventListener("click", toggleFullscreen);
+      if (HAS_POINTER_EVENTS) {
+        document.addEventListener("pointermove", onPointerMove, { passive: false });
+        document.addEventListener("pointerup", onPointerUp, { passive: false });
+        document.addEventListener("pointercancel", onPointerUp, { passive: false });
+      } else {
+        document.addEventListener("mousemove", onMouseMove, { passive: false });
+        document.addEventListener("mouseup", onMouseUp, { passive: false });
+      }
+      document.addEventListener("contextmenu", (event) => event.preventDefault());
+      window.addEventListener("resize", () => {
+        activePanels().forEach(layoutPanel);
+        resizeCelebrationCanvas();
+      });
+
+      const resizeObserver = new SafeResizeObserver((entries) => {
+        const touched = new Set(entries.map((entry) => entry.target));
+        activePanels().forEach((panel) => {
+          if (touched.has(panel.board)) layoutPanel(panel);
+        });
+      });
+      panels.forEach((panel) => resizeObserver.observe(panel.board));
+
+      function createPanel(root, playerIndex) {
+        const panel = {
+          root,
+          playerIndex,
+          board: root.querySelector("[data-board]"),
+          guide: root.querySelector("[data-guide]"),
+          answer: root.querySelector("[data-answer]"),
+          starfield: root.querySelector("[data-starfield]"),
+          starContext: root.querySelector("[data-starfield]").getContext("2d"),
+          layer: root.querySelector("[data-piece-layer]"),
+          jobLabel: root.querySelector("[data-job-label]"),
+          sectionLabel: root.querySelector("[data-section-label]"),
+          scoreLabel: root.querySelector("[data-score-label]"),
+          progressFill: root.querySelector("[data-progress-fill]"),
+          progressValue: root.querySelector("[data-progress-value]"),
+          checkButton: root.querySelector("[data-check]"),
+          backButton: root.querySelector("[data-back]"),
+          nextButton: root.querySelector("[data-next]"),
+          feedback: root.querySelector("[data-feedback]"),
+          feedbackImage: root.querySelector("[data-feedback] img"),
+          sectionIndex: 0,
+          done: false,
+          scores: Array(jobs.length).fill(0),
+          sectionStates: Array(jobs.length).fill(null),
+          pieces: [],
+          groups: new Map(),
+          groupCounter: 0,
+          scale: 1,
+          playWidth: 0,
+          playHeight: 0,
+          guideLeft: 0,
+          guideTop: 0,
+          guideWidth: 0,
+          guideHeight: 0,
+          boardStars: [],
+          laidOut: false,
+          pendingSectionState: null
+        };
+
+        panel.checkButton.addEventListener("click", () => checkPanel(panel));
+        panel.backButton.addEventListener("click", () => previousSection(panel));
+        panel.nextButton.addEventListener("click", () => nextSection(panel));
+        return panel;
+      }
+
+      function preloadAssets() {
+        const sources = ["assets/ui/timer-clock.png", "assets/ui/background-texture.png", CORRECT_LOGO, INCORRECT_LOGO];
+        jobs.forEach((job) => {
+          if (job.guideSrc) sources.push(job.guideSrc);
+          sources.push(solutionSrc(job));
+          job.pieces.forEach((piece) => sources.push(piece.src));
+        });
+        sources.forEach((src) => {
+          const image = new Image();
+          image.src = src;
+        });
+      }
+
+      function pieceSrc(job, pieceNumber) {
+        return job.pieces[pieceNumber - 1].src;
+      }
+
+      function solutionSrc(job) {
+        return job.solutionSrc || `assets/solutions/${job.folder}.png`;
+      }
+
+      function loadSection(panel, sectionIndex) {
+        cancelActiveDrags(panel);
+        panel.sectionIndex = sectionIndex;
+        panel.done = false;
+        panel.root.classList.remove("locked", "answer-revealed");
+        panel.layer.innerHTML = "";
+        panel.feedback.className = "feedback";
+        panel.pieces = [];
+        panel.groups = new Map();
+        panel.groupCounter = 0;
+        panel.laidOut = false;
+        panel.pendingSectionState = panel.sectionStates[sectionIndex];
+
+        const job = jobs[sectionIndex];
+        panel.jobLabel.textContent = job.title;
+        panel.guide.src = job.guideSrc || "";
+        panel.answer.src = solutionSrc(job);
+        panel.backButton.disabled = sectionIndex === 0;
+
+        for (let correctIndex = 0; correctIndex < PIECE_COUNT; correctIndex += 1) {
+          const pieceMeta = job.pieces[correctIndex];
+          const piece = {
+            correctIndex,
+            width: pieceMeta.width,
+            height: pieceMeta.height,
+            homeX: pieceMeta.homeX,
+            homeY: pieceMeta.homeY,
+            targetX: Number.isFinite(pieceMeta.targetX) ? pieceMeta.targetX : pieceMeta.homeX,
+            targetY: Number.isFinite(pieceMeta.targetY) ? pieceMeta.targetY : pieceMeta.homeY,
+            alphaX: pieceMeta.alphaX || 0,
+            alphaY: pieceMeta.alphaY || 0,
+            alphaWidth: pieceMeta.alphaWidth || pieceMeta.width,
+            alphaHeight: pieceMeta.alphaHeight || pieceMeta.height,
+            groupId: 0,
+            hasMoved: false,
+            x: 0,
+            y: 0,
+            el: document.createElement("div")
+          };
+          const image = document.createElement("img");
+
+          piece.el.className = "piece";
+          piece.el.draggable = false;
+          piece.el.dataset.correctIndex = String(correctIndex);
+          piece.el.setAttribute("role", "img");
+          piece.el.setAttribute("aria-label", `${job.title} puzzle piece`);
+          image.src = pieceMeta.src;
+          image.alt = "";
+          image.draggable = false;
+          piece.el.appendChild(image);
+          if (HAS_POINTER_EVENTS) {
+            piece.el.addEventListener("pointerdown", (event) => onPointerDown(event, panel, piece), { passive: false });
+          } else {
+            piece.el.addEventListener("mousedown", (event) => onMouseDown(event, panel, piece), { passive: false });
+          }
+          panel.layer.appendChild(piece.el);
+          panel.pieces.push(piece);
+          createSinglePieceGroup(panel, piece);
+        }
+
+        scheduleFrame(() => {
+          layoutPanel(panel);
+          updatePanelStats(panel);
+        });
+      }
+
+      function createSinglePieceGroup(panel, piece) {
+        panel.groupCounter += 1;
+        piece.groupId = panel.groupCounter;
+        panel.groups.set(piece.groupId, new Set([piece]));
+      }
+
+      function layoutPanel(panel) {
+        const rect = panel.board.getBoundingClientRect();
+        if (!rect.width || !rect.height) return;
+
+        const job = jobs[panel.sectionIndex];
+        const previousScale = panel.scale || 1;
+        const previousGuideLeft = panel.guideLeft || 0;
+        const previousGuideTop = panel.guideTop || 0;
+        panel.playWidth = rect.width;
+        panel.playHeight = rect.height;
+        resizeStarfield(panel);
+        const maxPieceWidth = Math.max(...job.pieces.map((piece) => piece.width));
+        const maxPieceHeight = Math.max(...job.pieces.map((piece) => piece.height));
+        const sideFitScale = Math.max(1, rect.width - STAGE_MARGIN * 6) / (job.solutionWidth + maxPieceWidth * 2);
+        const verticalFitScale = Math.max(1, rect.height - STAGE_MARGIN * 6) / (job.solutionHeight + maxPieceHeight * 2);
+        panel.scale = Math.max(0.12, Math.min(sideFitScale, verticalFitScale, 0.5));
+        panel.guideWidth = job.solutionWidth * panel.scale;
+        panel.guideHeight = job.solutionHeight * panel.scale;
+        panel.guideLeft = (rect.width - panel.guideWidth) / 2;
+        panel.guideTop = (rect.height - panel.guideHeight) / 2;
+        panel.guide.style.width = `${panel.guideWidth}px`;
+        panel.guide.style.height = `${panel.guideHeight}px`;
+        panel.guide.style.transform = `translate3d(${panel.guideLeft}px, ${panel.guideTop}px, 0)`;
+        panel.answer.style.width = `${panel.guideWidth}px`;
+        panel.answer.style.height = `${panel.guideHeight}px`;
+        panel.answer.style.transform = `translate3d(${panel.guideLeft}px, ${panel.guideTop}px, 0)`;
+
+        panel.pieces.forEach((piece) => {
+          piece.el.style.width = `${piece.width * panel.scale}px`;
+          piece.el.style.height = `${piece.height * panel.scale}px`;
+          piece.el.style.zIndex = String(10 + piece.correctIndex);
+        });
+
+        if (!panel.laidOut) {
+          if (panel.pendingSectionState) {
+            restoreSectionState(panel, panel.pendingSectionState);
+          } else {
+            scatterPieces(panel);
+          }
+          panel.pendingSectionState = null;
+          panel.laidOut = true;
+          return;
+        }
+
+        if (
+          previousScale
+          && (
+            previousScale !== panel.scale
+            || previousGuideLeft !== panel.guideLeft
+            || previousGuideTop !== panel.guideTop
+          )
+        ) {
+          panel.pieces.forEach((piece) => {
+            piece.x = panel.guideLeft + ((piece.x - previousGuideLeft) / previousScale) * panel.scale;
+            piece.y = panel.guideTop + ((piece.y - previousGuideTop) / previousScale) * panel.scale;
+            keepPieceInPlayfield(panel, piece);
+            setPieceTransform(piece);
+          });
+        }
+      }
+
+      function scatterPieces(panel) {
+        const sorted = panel.pieces.slice().sort(() => Math.random() - 0.5);
+
+        sorted.forEach((piece, index) => {
+          piece.stageIndex = index;
+          piece.stageJitterX = Math.random() * 2 - 1;
+          piece.stageJitterY = Math.random() * 2 - 1;
+          placePieceInStage(panel, piece);
+        });
+      }
+
+      function stageSlotsFor(panel) {
+        const total = Math.max(1, panel.pieces.length);
+        const topCount = Math.max(1, Math.ceil(total / 3));
+        const bottomCount = Math.max(1, Math.ceil(total / 3));
+        const sideCount = Math.max(2, total - topCount - bottomCount);
+        const leftCount = Math.max(1, Math.floor(sideCount / 2));
+        const rightCount = Math.max(1, sideCount - leftCount);
+        const topHeight = Math.max(1, panel.guideTop - STAGE_MARGIN * 1.5);
+        const bottomTop = panel.guideTop + panel.guideHeight + STAGE_MARGIN * 0.5;
+        const bottomHeight = Math.max(1, panel.playHeight - bottomTop - STAGE_MARGIN);
+        const sideTop = panel.guideTop + STAGE_MARGIN * 0.5;
+        const sideHeight = Math.max(1, panel.guideHeight - STAGE_MARGIN);
+        const leftWidth = Math.max(1, panel.guideLeft - STAGE_MARGIN * 1.5);
+        const rightLeft = panel.guideLeft + panel.guideWidth + STAGE_MARGIN * 0.5;
+        const rightWidth = Math.max(1, panel.playWidth - rightLeft - STAGE_MARGIN);
+
+        return [
+          ...slotsInRect("top", STAGE_MARGIN, STAGE_MARGIN, panel.playWidth - STAGE_MARGIN * 2, topHeight, topCount),
+          ...slotsInRect("bottom", STAGE_MARGIN, bottomTop, panel.playWidth - STAGE_MARGIN * 2, bottomHeight, bottomCount),
+          ...slotsInRect("left", STAGE_MARGIN, sideTop, leftWidth, sideHeight, leftCount),
+          ...slotsInRect("right", rightLeft, sideTop, rightWidth, sideHeight, rightCount)
+        ];
+      }
+
+      function slotsInRect(side, x, y, width, height, count) {
+        const slots = [];
+        const safeCount = Math.max(1, count);
+        const horizontal = side === "top" || side === "bottom";
+        for (let index = 0; index < safeCount; index += 1) {
+          slots.push({
+            side,
+            x: horizontal ? x + (width / safeCount) * index : x,
+            y: horizontal ? y : y + (height / safeCount) * index,
+            width: horizontal ? width / safeCount : width,
+            height: horizontal ? height : height / safeCount
+          });
+        }
+        return slots;
+      }
+
+      function placePieceInStage(panel, piece) {
+        const slots = stageSlotsFor(panel);
+        const slot = slots[piece.stageIndex % slots.length] || slots[0];
+        const pieceWidth = piece.width * panel.scale;
+        const pieceHeight = piece.height * panel.scale;
+        const freeX = Math.max(0, slot.width - pieceWidth);
+        const freeY = Math.max(0, slot.height - pieceHeight);
+        const jitterX = (piece.stageJitterX || 0) * Math.min(14, freeX * 0.42);
+        const jitterY = (piece.stageJitterY || 0) * Math.min(14, freeY * 0.42);
+
+        piece.x = slot.x + (slot.width - pieceWidth) / 2 + jitterX;
+        piece.y = slot.y + (slot.height - pieceHeight) / 2 + jitterY;
+
+        if (slot.side === "top") {
+          piece.y = clamp(piece.y, STAGE_MARGIN, panel.guideTop - pieceHeight - STAGE_MARGIN * 0.5);
+        } else if (slot.side === "bottom") {
+          piece.y = clamp(piece.y, panel.guideTop + panel.guideHeight + STAGE_MARGIN * 0.5, panel.playHeight - pieceHeight - STAGE_MARGIN);
+        } else if (slot.side === "left") {
+          piece.x = clamp(piece.x, STAGE_MARGIN, panel.guideLeft - pieceWidth - STAGE_MARGIN * 0.5);
+        } else if (slot.side === "right") {
+          piece.x = clamp(piece.x, panel.guideLeft + panel.guideWidth + STAGE_MARGIN * 0.5, panel.playWidth - pieceWidth - STAGE_MARGIN);
+        }
+
+        keepPieceInPlayfield(panel, piece);
+        setPieceTransform(piece);
+      }
+
+      function activePanels() {
+        return state.playerMode === "one" ? [panels[0]] : panels;
+      }
+
+      function togglePlayerMode() {
+        saveAllCurrentScores();
+        cancelActiveDrags();
+        state.playerMode = state.playerMode === "one" ? "two" : "one";
+        applyPlayerMode();
+      }
+
+      function applyPlayerMode(reflow = true) {
+        const onePlayer = state.playerMode === "one";
+        game.classList.toggle("one-player", onePlayer);
+        playersArea.setAttribute(
+          "aria-label",
+          onePlayer ? "One player puzzle dashboard" : "Two player puzzle dashboards"
+        );
+        panels.forEach((panel) => {
+          panel.root.setAttribute("aria-hidden", onePlayer && panel.playerIndex !== 0 ? "true" : "false");
+        });
+        updatePlayerModeButton();
+
+        if (state.sectionExpired) {
+          activePanels().forEach(solvePanelSection);
+        }
+
+        setLocked(state.locked);
+        if (!reflow) return;
+
+        scheduleFrame(() => {
+          activePanels().forEach(layoutPanel);
+        });
+      }
+
+      function updatePlayerModeButton() {
+        const onePlayer = state.playerMode === "one";
+        playerModeBtn.textContent = onePlayer ? "TWO PLAYER" : "ONE PLAYER";
+        playerModeBtn.setAttribute("aria-pressed", onePlayer ? "true" : "false");
+      }
+
+      function startGame() {
+        stopCelebration();
+        state.started = true;
+        state.gameEnded = false;
+        if (state.sectionExpired || state.remaining <= 0) {
+          state.remaining = GAME_SECONDS;
+        }
+        startSectionTimer(false);
+      }
+
+      function startSectionTimer(resetRemaining = true) {
+        if (resetRemaining) {
+          state.remaining = GAME_SECONDS;
+        }
+        state.running = true;
+        state.paused = false;
+        state.locked = false;
+        state.sectionExpired = false;
+        state.gameEnded = false;
+        setLocked(false);
+        updateTimerReadout();
+        updatePauseButton();
+        state.endAt = Date.now() + state.remaining * 1000;
+        cancelFrame(state.timerFrame);
+        tickTimer();
+      }
+
+      function endGame() {
+        finishGame();
+      }
+
+      function finishGame() {
+        saveAllCurrentScores();
+        state.started = false;
+        state.running = false;
+        state.paused = false;
+        state.locked = true;
+        state.sectionExpired = false;
+        state.gameEnded = true;
+        setLocked(true);
+        cancelFrame(state.timerFrame);
+        updatePauseButton();
+        announceWinner();
+      }
+
+      function resetGame() {
+        state.started = false;
+        state.running = false;
+        state.paused = false;
+        state.locked = false;
+        state.sectionExpired = false;
+        state.gameEnded = false;
+        state.activeSection = 0;
+        state.remaining = GAME_SECONDS;
+        cancelFrame(state.timerFrame);
+        cancelActiveDrags();
+        stopCelebration();
+        setLocked(false);
+        updateTimerReadout();
+        updatePauseButton();
+        panels.forEach((panel) => {
+          panel.done = false;
+          panel.scores = Array(jobs.length).fill(0);
+          panel.sectionStates = Array(jobs.length).fill(null);
+          loadSection(panel, 0);
+        });
+      }
+
+      function initPasswordGate() {
+        passwordInput.focus({ preventScroll: true });
+        passwordForm.addEventListener("submit", (event) => {
+          event.preventDefault();
+          if (passwordInput.value.trim().toUpperCase() === "JOBS") {
+            passwordOverlay.classList.add("hidden");
+            passwordError.textContent = "";
+            return;
+          }
+
+          passwordInput.value = "";
+          passwordError.textContent = "TRY AGAIN";
+          passwordInput.focus({ preventScroll: true });
+        });
+      }
+
+      function tickTimer() {
+        if (!state.running) return;
+
+        state.remaining = Math.max(0, Math.ceil((state.endAt - Date.now()) / 1000));
+        updateTimerReadout();
+
+        if (state.remaining <= 0) {
+          handleSectionTimeout();
+          return;
+        }
+
+        state.timerFrame = scheduleFrame(tickTimer);
+      }
+
+      function handleSectionTimeout() {
+        state.running = false;
+        state.paused = false;
+        state.remaining = 0;
+        cancelFrame(state.timerFrame);
+        cancelActiveDrags();
+        updateTimerReadout();
+        saveAllCurrentScores();
+        solveCurrentSection();
+        state.locked = true;
+        state.sectionExpired = true;
+        setLocked(true);
+        updatePauseButton();
+
+        if (state.activeSection >= jobs.length - 1) {
+          state.started = false;
+          state.gameEnded = true;
+          announceWinner();
+        }
+      }
+
+      function togglePause() {
+        if (state.running) {
+          pauseTimer();
+          return;
+        }
+
+        if (state.paused) {
+          resumeTimer();
+        }
+      }
+
+      function pauseTimer() {
+        if (!state.running) return;
+
+        state.remaining = Math.max(0, Math.ceil((state.endAt - Date.now()) / 1000));
+        state.running = false;
+        state.paused = true;
+        cancelFrame(state.timerFrame);
+        setLocked(true);
+        updateTimerReadout();
+        updatePauseButton();
+      }
+
+      function resumeTimer() {
+        if (!state.paused || state.remaining <= 0 || state.gameEnded || state.sectionExpired) return;
+
+        state.running = true;
+        state.paused = false;
+        state.locked = false;
+        setLocked(false);
+        updatePauseButton();
+        state.endAt = Date.now() + state.remaining * 1000;
+        cancelFrame(state.timerFrame);
+        tickTimer();
+      }
+
+      function updateTimerReadout() {
+        const minutes = Math.floor(state.remaining / 60);
+        const seconds = state.remaining % 60;
+        timerReadout.textContent = `${minutes}:${String(seconds).padStart(2, "0")}`;
+      }
+
+      function updatePauseButton() {
+        pauseBtn.textContent = state.paused ? "RESUME" : "PAUSE";
+        pauseBtn.disabled = !state.started || state.gameEnded || state.sectionExpired || (!state.running && !state.paused);
+        pauseBtn.setAttribute("aria-pressed", state.paused ? "true" : "false");
+      }
+
+      function setLocked(locked) {
+        panels.forEach((panel) => {
+          panel.root.classList.toggle("locked", locked || state.paused || state.gameEnded || state.sectionExpired || panel.done);
+        });
+      }
+
+      function solveCurrentSection() {
+        activePanels().forEach((panel) => solvePanelSection(panel));
+      }
+
+      function solvePanelSection(panel) {
+        panel.root.classList.add("answer-revealed");
+      }
+
+      function onPointerDown(event, panel, piece) {
+        if (state.locked || state.paused || state.sectionExpired || state.gameEnded || panel.done || event.button > 0) return;
+
+        lastPointerDownAt = Date.now();
+        beginDrag(event, panel, piece, event.pointerId, event.clientX, event.clientY, true);
+      }
+
+      function onMouseDown(event, panel, piece) {
+        if (state.locked || state.paused || state.sectionExpired || state.gameEnded || panel.done || event.button !== 0 || Date.now() - lastPointerDownAt < 500) return;
+
+        beginDrag(event, panel, piece, "mouse", event.clientX, event.clientY, false);
+      }
+
+      function beginDrag(event, panel, piece, dragId, clientX, clientY, usePointerCapture) {
+        if (activeDrags.size >= MAX_ACTIVE_DRAGS) return;
+        if (activeDragCountForPanel(panel) >= MAX_PANEL_ACTIVE_DRAGS) return;
+        if (pieceAlreadyDragging(piece)) return;
+        if (isGroupActive(panel, piece.groupId)) return;
+
+        preventDefaultIfPossible(event);
+        if (usePointerCapture) {
+          try {
+            piece.el.setPointerCapture(dragId);
+          } catch (_) {
+            // Pointer capture can be unavailable for synthetic or already-ended pointers.
+          }
+        }
+
+        piece.el.classList.add("dragging");
+        const groupPieces = groupPiecesFor(panel, piece.groupId);
+        groupPieces.forEach((groupPiece) => {
+          groupPiece.el.classList.add("dragging");
+          groupPiece.el.style.zIndex = String(++state.z);
+        });
+
+        activeDrags.set(dragId, {
+          panel,
+          piece,
+          groupId: piece.groupId,
+          groupPieces,
+          pointerId: dragId,
+          usePointerCapture,
+          startX: clientX,
+          startY: clientY,
+          origins: groupPieces.map((groupPiece) => ({
+            piece: groupPiece,
+            x: groupPiece.x,
+            y: groupPiece.y
+          })),
+          targetDx: 0,
+          targetDy: 0,
+          frame: 0
+        });
+      }
+
+      function onPointerMove(event) {
+        moveDrag(event, event.pointerId);
+      }
+
+      function onMouseMove(event) {
+        moveDrag(event, "mouse");
+      }
+
+      function moveDrag(event, dragId) {
+        const drag = activeDrags.get(dragId);
+        if (!drag) return;
+
+        preventDefaultIfPossible(event);
+        const point = latestEventPoint(event);
+        const desired = clampGroupDelta(
+          drag.panel,
+          drag.groupPieces,
+          point.clientX - drag.startX,
+          point.clientY - drag.startY,
+          drag.origins
+        );
+        drag.targetDx = desired.dx;
+        drag.targetDy = desired.dy;
+
+        if (!drag.frame) {
+          drag.frame = scheduleFrame(() => {
+            drag.frame = 0;
+            drag.origins.forEach((origin) => {
+              origin.piece.x = origin.x + drag.targetDx;
+              origin.piece.y = origin.y + drag.targetDy;
+              setPieceTransform(origin.piece);
+            });
+          });
+        }
+      }
+
+      function onPointerUp(event) {
+        finishDrag(event, event.pointerId);
+      }
+
+      function onMouseUp(event) {
+        finishDrag(event, "mouse");
+      }
+
+      function finishDrag(event, dragId) {
+        const drag = activeDrags.get(dragId);
+        if (!drag) return;
+
+        preventDefaultIfPossible(event);
+        activeDrags.delete(dragId);
+        if (drag.frame) cancelFrame(drag.frame);
+        drag.origins.forEach((origin) => {
+          origin.piece.x = origin.x + drag.targetDx;
+          origin.piece.y = origin.y + drag.targetDy;
+          setPieceTransform(origin.piece);
+        });
+
+        const { panel, piece } = drag;
+        drag.groupPieces.forEach((groupPiece) => {
+          groupPiece.hasMoved = true;
+          groupPiece.el.classList.remove("dragging");
+        });
+
+        if (drag.usePointerCapture) {
+          try {
+            piece.el.releasePointerCapture(drag.pointerId);
+          } catch (_) {
+            // Some browsers auto-release pointer capture on pointer cancel.
+          }
+        }
+
+        updatePanelStats(panel);
+        saveSectionState(panel);
+      }
+
+      function cancelActiveDrags(panel = null) {
+        Array.from(activeDrags.entries()).forEach(([dragId, drag]) => {
+          if (panel && drag.panel !== panel) return;
+
+          activeDrags.delete(dragId);
+          if (drag.frame) cancelFrame(drag.frame);
+          drag.groupPieces.forEach((groupPiece) => {
+            groupPiece.el.classList.remove("dragging");
+          });
+
+          if (drag.usePointerCapture) {
+            try {
+              drag.piece.el.releasePointerCapture(drag.pointerId);
+            } catch (_) {
+              // Pointer capture can already be gone when a section changes.
+            }
+          }
+        });
+      }
+
+      function groupPiecesFor(panel, groupId) {
+        return Array.from(panel.groups.get(groupId) || []);
+      }
+
+      function pieceAlreadyDragging(piece) {
+        for (const drag of activeDrags.values()) {
+          if (drag.piece === piece) return true;
+        }
+        return false;
+      }
+
+      function activeDragCountForPanel(panel) {
+        let count = 0;
+        for (const drag of activeDrags.values()) {
+          if (drag.panel === panel) count += 1;
+        }
+        return count;
+      }
+
+      function isGroupActive(panel, groupId) {
+        for (const drag of activeDrags.values()) {
+          if (drag.panel === panel && drag.groupId === groupId) return true;
+        }
+        return false;
+      }
+
+      function latestEventPoint(event) {
+        if (typeof event.getCoalescedEvents === "function") {
+          const events = event.getCoalescedEvents();
+          if (events && events.length) return events[events.length - 1];
+        }
+        return event;
+      }
+
+      function preventDefaultIfPossible(event) {
+        if (event.cancelable) event.preventDefault();
+      }
+
+      function clamp(value, min, max) {
+        if (max < min) return min;
+        return Math.min(max, Math.max(min, value));
+      }
+
+      function clampGroupDelta(panel, groupPieces, dx, dy, origins) {
+        const margin = DRAG_MARGIN;
+        let minDx = -Infinity;
+        let maxDx = Infinity;
+        let minDy = -Infinity;
+        let maxDy = Infinity;
+
+        origins.forEach((origin) => {
+          const pieceWidth = origin.piece.width * panel.scale;
+          const pieceHeight = origin.piece.height * panel.scale;
+          minDx = Math.max(minDx, margin - origin.x);
+          minDy = Math.max(minDy, margin - origin.y);
+          maxDx = Math.min(maxDx, panel.playWidth - pieceWidth - margin - origin.x);
+          maxDy = Math.min(maxDy, panel.playHeight - pieceHeight - margin - origin.y);
+        });
+
+        return {
+          dx: clamp(dx, minDx, maxDx),
+          dy: clamp(dy, minDy, maxDy)
+        };
+      }
+
+      function keepPieceInPlayfield(panel, piece) {
+        const margin = DRAG_MARGIN;
+        const pieceWidth = piece.width * panel.scale;
+        const pieceHeight = piece.height * panel.scale;
+        piece.x = clamp(piece.x, margin, panel.playWidth - pieceWidth - margin);
+        piece.y = clamp(piece.y, margin, panel.playHeight - pieceHeight - margin);
+      }
+
+      function guideTargetX(panel, piece) {
+        return panel.guideLeft + piece.targetX * panel.scale;
+      }
+
+      function guideTargetY(panel, piece) {
+        return panel.guideTop + piece.targetY * panel.scale;
+      }
+
+      function setPieceTransform(piece) {
+        piece.el.style.transform = `translate3d(${piece.x}px, ${piece.y}px, 0)`;
+      }
+
+      function correctPieceCount(panel) {
+        return placedPieceCount(panel);
+      }
+
+      function completionPercent(panel) {
+        return Math.round((placedPieceCount(panel) / PIECE_COUNT) * 100);
+      }
+
+      function placedPieceCount(panel) {
+        return panel.pieces.reduce((count, piece) => {
+          return count + (pieceIsPlaced(panel, piece) ? 1 : 0);
+        }, 0);
+      }
+
+      function pieceIsPlaced(panel, piece) {
+        if (!piece.hasMoved) return false;
+
+        const current = visibleRectFor(piece, piece.x, piece.y, panel.scale);
+        const target = visibleRectFor(piece, guideTargetX(panel, piece), guideTargetY(panel, piece), panel.scale);
+        const currentCenterX = current.x + current.width / 2;
+        const currentCenterY = current.y + current.height / 2;
+        const targetCenterX = target.x + target.width / 2;
+        const targetCenterY = target.y + target.height / 2;
+        const distance = Math.hypot(currentCenterX - targetCenterX, currentCenterY - targetCenterY);
+        const tolerance = Math.max(
+          18,
+          Math.min(PLACEMENT_TOLERANCE, Math.min(target.width, target.height) * 0.22)
+        );
+        const overlap = overlapRatio(current, target);
+
+        return distance <= tolerance || overlap >= 0.74;
+      }
+
+      function visibleRectFor(piece, x, y, scale) {
+        return {
+          x: x + piece.alphaX * scale,
+          y: y + piece.alphaY * scale,
+          width: piece.alphaWidth * scale,
+          height: piece.alphaHeight * scale
+        };
+      }
+
+      function overlapRatio(a, b) {
+        const left = Math.max(a.x, b.x);
+        const top = Math.max(a.y, b.y);
+        const right = Math.min(a.x + a.width, b.x + b.width);
+        const bottom = Math.min(a.y + a.height, b.y + b.height);
+        if (right <= left || bottom <= top) return 0;
+        const intersection = (right - left) * (bottom - top);
+        const targetArea = b.width * b.height || 1;
+        return intersection / targetArea;
+      }
+
+      function updatePanelStats(panel) {
+        const percent = completionPercent(panel);
+        panel.scores[panel.sectionIndex] = percent;
+        panel.sectionLabel.textContent = `SECTION ${panel.sectionIndex + 1}/8`;
+        panel.scoreLabel.textContent = `TOTAL ${totalScore(panel)}%`;
+        panel.progressFill.style.width = `${percent}%`;
+        panel.progressValue.textContent = `${percent}%`;
+      }
+
+      function saveSectionState(panel) {
+        if (!panel.pieces.length || !panel.scale) return;
+
+        panel.sectionStates[panel.sectionIndex] = {
+          pieces: panel.pieces.map((piece) => ({
+            correctIndex: piece.correctIndex,
+            x: (piece.x - panel.guideLeft) / panel.scale,
+            y: (piece.y - panel.guideTop) / panel.scale,
+            hasMoved: piece.hasMoved,
+            zIndex: piece.el.style.zIndex || ""
+          }))
+        };
+      }
+
+      function restoreSectionState(panel, sectionState) {
+        const savedPieces = new Map((sectionState.pieces || []).map((piece) => [piece.correctIndex, piece]));
+        panel.pieces.forEach((piece) => {
+          const saved = savedPieces.get(piece.correctIndex);
+          if (!saved) return;
+
+          piece.x = panel.guideLeft + saved.x * panel.scale;
+          piece.y = panel.guideTop + saved.y * panel.scale;
+          piece.hasMoved = Boolean(saved.hasMoved);
+          keepPieceInPlayfield(panel, piece);
+          if (saved.zIndex) piece.el.style.zIndex = saved.zIndex;
+          setPieceTransform(piece);
+        });
+      }
+
+      function totalScore(panel) {
+        return panel.scores.reduce((sum, score) => sum + score, 0);
+      }
+
+      function saveAllCurrentScores() {
+        activePanels().forEach((panel) => {
+          updatePanelStats(panel);
+          saveSectionState(panel);
+        });
+      }
+
+      function goToSection(sectionIndex) {
+        const nextIndex = clamp(sectionIndex, 0, jobs.length - 1);
+        if (nextIndex === state.activeSection && !state.sectionExpired) return;
+
+        saveAllCurrentScores();
+        cancelFrame(state.timerFrame);
+        cancelActiveDrags();
+
+        const shouldRestartTimer = state.started && !state.gameEnded;
+        state.activeSection = nextIndex;
+        state.running = false;
+        state.paused = false;
+        state.locked = false;
+        state.sectionExpired = false;
+        state.gameEnded = false;
+        state.remaining = GAME_SECONDS;
+        setLocked(false);
+        updateTimerReadout();
+        updatePauseButton();
+
+        panels.forEach((panel) => {
+          panel.done = false;
+          loadSection(panel, nextIndex);
+        });
+
+        if (shouldRestartTimer) {
+          startSectionTimer(true);
+        }
+      }
+
+      function checkPanel(panel) {
+        if (panel.done) return;
+
+        updatePanelStats(panel);
+        saveSectionState(panel);
+        const solved = completionPercent(panel) >= CHECK_PASS_PERCENT;
+        panel.feedbackImage.src = solved ? CORRECT_LOGO : INCORRECT_LOGO;
+        panel.feedback.className = `feedback show ${solved ? "correct" : "incorrect"}`;
+        panel.board.classList.remove("correct", "wrong");
+        void panel.board.offsetWidth;
+        panel.board.classList.add(solved ? "correct" : "wrong");
+
+        window.setTimeout(() => {
+          panel.feedback.className = "feedback";
+          panel.board.classList.remove("correct", "wrong");
+        }, solved ? 980 : 920);
+      }
+
+      function previousSection(panel) {
+        if (state.gameEnded || state.activeSection <= 0) return;
+
+        goToSection(state.activeSection - 1);
+      }
+
+      function nextSection(panel) {
+        if (state.gameEnded) return;
+
+        if (state.activeSection < jobs.length - 1) {
+          goToSection(state.activeSection + 1);
+        } else {
+          finishGame();
+        }
+      }
+
+      function announceWinner() {
+        if (state.playerMode === "one") {
+          const total = totalScore(panels[0]);
+          winnerTitle.textContent = "GAME COMPLETE";
+          winnerScore.innerHTML = `PLAYER 1: ${total}%`;
+          winnerOverlay.classList.add("show");
+          startCelebration();
+          return;
+        }
+
+        const totals = panels.map(totalScore);
+        const title = totals[0] === totals[1]
+          ? "TIE GAME"
+          : totals[0] > totals[1]
+            ? "PLAYER 1 WINS"
+            : "PLAYER 2 WINS";
+
+        winnerTitle.textContent = title;
+        winnerScore.innerHTML = `PLAYER 1: ${totals[0]}%<br>PLAYER 2: ${totals[1]}%`;
+        winnerOverlay.classList.add("show");
+        startCelebration();
+      }
+
+      function toggleFullscreen() {
+        const target = document.documentElement;
+        if (!document.fullscreenElement) {
+          if (target.requestFullscreen) target.requestFullscreen();
+          return;
+        }
+        if (document.exitFullscreen) document.exitFullscreen();
+      }
+
+      function resizeStarfield(panel) {
+        const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+        const width = Math.max(1, Math.floor(panel.playWidth * pixelRatio));
+        const height = Math.max(1, Math.floor(panel.playHeight * pixelRatio));
+        if (panel.starfield.width !== width || panel.starfield.height !== height) {
+          panel.starfield.width = width;
+          panel.starfield.height = height;
+          panel.starfield.style.width = `${panel.playWidth}px`;
+          panel.starfield.style.height = `${panel.playHeight}px`;
+          panel.starContext.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+          panel.boardStars = createBoardStars(panel);
+        }
+      }
+
+      function createBoardStars(panel) {
+        const count = Math.max(26, Math.min(54, Math.round((panel.playWidth * panel.playHeight) / 15000)));
+        return Array.from({ length: count }, () => ({
+          x: Math.random() * panel.playWidth,
+          y: Math.random() * panel.playHeight,
+          radius: 3 + Math.random() * 7,
+          angle: Math.random() * Math.PI * 2,
+          spin: -0.012 + Math.random() * 0.024,
+          pulse: Math.random() * Math.PI * 2,
+          color: `hsl(${Math.floor(Math.random() * 360)}, 94%, 62%)`
+        }));
+      }
+
+      function animateDashboardStars() {
+        activePanels().forEach((panel) => {
+          const ctx = panel.starContext;
+          const width = panel.playWidth;
+          const height = panel.playHeight;
+          if (!width || !height) return;
+
+          ctx.clearRect(0, 0, width, height);
+          panel.boardStars.forEach((star) => {
+            star.angle += star.spin;
+            star.pulse += 0.035;
+            drawDashboardStar(
+              ctx,
+              star.x,
+              star.y,
+              star.radius * (0.86 + Math.sin(star.pulse) * 0.14),
+              star.angle,
+              star.color
+            );
+          });
+        });
+
+        state.dashboardFrame = scheduleFrame(animateDashboardStars);
+      }
+
+      function drawDashboardStar(ctx, x, y, radius, rotation, color) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(rotation);
+        ctx.beginPath();
+        for (let point = 0; point < 10; point += 1) {
+          const angle = -Math.PI / 2 + point * Math.PI / 5;
+          const currentRadius = point % 2 === 0 ? radius : radius * 0.45;
+          const px = Math.cos(angle) * currentRadius;
+          const py = Math.sin(angle) * currentRadius;
+          if (point === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+        ctx.fillStyle = color;
+        ctx.globalAlpha = 0.62;
+        ctx.shadowColor = color;
+        ctx.shadowBlur = 10;
+        ctx.fill();
+        ctx.restore();
+      }
+
+      function resizeCelebrationCanvas() {
+        const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+        const width = Math.max(1, Math.floor(window.innerWidth * pixelRatio));
+        const height = Math.max(1, Math.floor(window.innerHeight * pixelRatio));
+        if (celebrationCanvas.width !== width || celebrationCanvas.height !== height) {
+          celebrationCanvas.width = width;
+          celebrationCanvas.height = height;
+          celebrationCanvas.style.width = `${window.innerWidth}px`;
+          celebrationCanvas.style.height = `${window.innerHeight}px`;
+          celebrationContext.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+        }
+      }
+
+      function startCelebration() {
+        resizeCelebrationCanvas();
+        state.celebrating = true;
+        state.confetti = Array.from({ length: 3000 }, createConfetti);
+        state.stars = Array.from({ length: 100 }, createStar);
+        cancelFrame(state.celebrationFrame);
+        animateCelebration();
+      }
+
+      function stopCelebration() {
+        state.celebrating = false;
+        state.confetti = [];
+        state.stars = [];
+        winnerOverlay.classList.remove("show");
+        cancelFrame(state.celebrationFrame);
+        celebrationContext.clearRect(0, 0, window.innerWidth, window.innerHeight);
+      }
+
+      function createConfetti() {
+        return {
+          x: Math.random() * window.innerWidth,
+          y: Math.random() * window.innerHeight,
+          size: 2 + Math.random() * 5,
+          speed: 1.2 + Math.random() * 3.7,
+          drift: -1.4 + Math.random() * 2.8,
+          angle: Math.random() * Math.PI * 2,
+          spin: -0.18 + Math.random() * 0.36,
+          color: `hsl(${Math.floor(Math.random() * 360)}, 95%, 58%)`
+        };
+      }
+
+      function createStar() {
+        return {
+          x: Math.random() * window.innerWidth,
+          y: Math.random() * window.innerHeight,
+          radius: 5 + Math.random() * 12,
+          speed: 0.7 + Math.random() * 2.3,
+          drift: -0.8 + Math.random() * 1.6,
+          pulse: Math.random() * Math.PI * 2,
+          color: `hsl(${Math.floor(Math.random() * 360)}, 95%, 64%)`
+        };
+      }
+
+      function animateCelebration() {
+        if (!state.celebrating) return;
+
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+        celebrationContext.clearRect(0, 0, width, height);
+
+        for (const confetto of state.confetti) {
+          confetto.y += confetto.speed;
+          confetto.x += confetto.drift + Math.sin(confetto.angle) * 0.6;
+          confetto.angle += confetto.spin;
+          if (confetto.y > height + 12) {
+            confetto.y = -12;
+            confetto.x = Math.random() * width;
+          }
+          if (confetto.x < -14) confetto.x = width + 14;
+          if (confetto.x > width + 14) confetto.x = -14;
+
+          celebrationContext.save();
+          celebrationContext.translate(confetto.x, confetto.y);
+          celebrationContext.rotate(confetto.angle);
+          celebrationContext.fillStyle = confetto.color;
+          celebrationContext.fillRect(-confetto.size / 2, -confetto.size / 2, confetto.size * 1.8, confetto.size);
+          celebrationContext.restore();
+        }
+
+        for (const star of state.stars) {
+          star.y += star.speed;
+          star.x += star.drift;
+          star.pulse += 0.06;
+          if (star.y > height + 20) {
+            star.y = -20;
+            star.x = Math.random() * width;
+          }
+          if (star.x < -20) star.x = width + 20;
+          if (star.x > width + 20) star.x = -20;
+
+          drawStar(
+            celebrationContext,
+            star.x,
+            star.y,
+            star.radius * (0.78 + Math.sin(star.pulse) * 0.18),
+            star.color
+          );
+        }
+
+        state.celebrationFrame = scheduleFrame(animateCelebration);
+      }
+
+      function drawStar(ctx, x, y, radius, color) {
+        ctx.save();
+        ctx.beginPath();
+        for (let point = 0; point < 10; point += 1) {
+          const angle = -Math.PI / 2 + point * Math.PI / 5;
+          const currentRadius = point % 2 === 0 ? radius : radius * 0.46;
+          const px = x + Math.cos(angle) * currentRadius;
+          const py = y + Math.sin(angle) * currentRadius;
+          if (point === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+        ctx.fillStyle = color;
+        ctx.shadowColor = color;
+        ctx.shadowBlur = 10;
+        ctx.fill();
+        ctx.restore();
+      }
+
+      window.jobsPuzzleGame = {
+        start: startGame,
+        end: endGame,
+        reset: resetGame,
+        panels,
+        scores: () => panels.map((panel) => panel.scores.slice()),
+        totals: () => panels.map(totalScore)
+      };
+    })();
+  </script>
+</body>
+</html>
