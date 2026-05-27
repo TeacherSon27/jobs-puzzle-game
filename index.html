@@ -2,8 +2,33 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, viewport-fit=cover"
+  >
+
   <title>Jobs Puzzle Game</title>
+
+  <!-- PWA / iPad standalone support -->
+  <link rel="manifest" href="./manifest.json">
+
+  <meta name="theme-color" content="#020306">
+
+  <meta
+    name="apple-mobile-web-app-capable"
+    content="yes"
+  >
+
+  <meta
+    name="apple-mobile-web-app-status-bar-style"
+    content="black-translucent"
+  >
+
+  <meta
+    name="apple-mobile-web-app-title"
+    content="Jobs Puzzle Game"
+  >
   <style>
     :root {
       --gold: #f3b71b;
@@ -2229,5 +2254,21 @@
       };
     })();
   </script>
+  <script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker
+      .register('./sw.js')
+      .catch(err => console.log('SW registration failed', err));
+  });
+}
+
+/* detect standalone mode */
+console.log(
+  'Standalone:',
+  window.matchMedia('(display-mode: standalone)').matches ||
+  window.navigator.standalone
+);
+</script>
 </body>
 </html>
