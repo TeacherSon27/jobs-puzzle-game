@@ -2,33 +2,16 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1, viewport-fit=cover"
-  >
-
-  <title>Jobs Puzzle Game</title>
-
-  <!-- PWA / iPad standalone support -->
-  <link rel="manifest" href="./manifest.json">
-
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#020306">
-
-  <meta
-    name="apple-mobile-web-app-capable"
-    content="yes"
-  >
-
-  <meta
-    name="apple-mobile-web-app-status-bar-style"
-    content="black-translucent"
-  >
-
-  <meta
-    name="apple-mobile-web-app-title"
-    content="Jobs Puzzle Game"
-  >
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Jobs Puzzle">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon-180.png">
+  <link rel="icon" sizes="192x192" href="icon-192.png">
+  <title>Jobs Puzzle Game</title>
   <style>
     :root {
       --gold: #f3b71b;
@@ -56,9 +39,11 @@
       color: var(--white);
       font-family: Arial, Helvetica, sans-serif;
       letter-spacing: 0;
+      overscroll-behavior: none;
       touch-action: none;
       user-select: none;
       -webkit-user-select: none;
+      -webkit-touch-callout: none;
     }
 
     body {
@@ -80,6 +65,7 @@
       grid-template-rows: 178px minmax(0, 1fr);
       width: 100vw;
       height: 100vh;
+      height: 100dvh;
       overflow: hidden;
       background:
         radial-gradient(circle at 16% 12%, rgba(255, 248, 182, 0.62), transparent 26%),
@@ -88,6 +74,7 @@
         linear-gradient(135deg, rgba(78, 45, 0, 0.9), rgba(255, 199, 50, 0.42) 44%, rgba(62, 37, 0, 0.94)),
         url("assets/ui/background-texture.png");
       background-size: cover;
+      transition: grid-template-rows 220ms ease;
     }
 
     .game-dashboard::before {
@@ -195,6 +182,12 @@
       grid-template-rows: 54px 54px;
       gap: 10px;
       align-items: center;
+      transition:
+        grid-template-columns 220ms ease,
+        grid-template-rows 220ms ease,
+        gap 220ms ease,
+        top 220ms ease,
+        left 220ms ease;
     }
 
     .gold-button {
@@ -213,6 +206,15 @@
         0 12px 22px rgba(0, 0, 0, 0.42),
         inset 0 1px 0 rgba(255, 255, 255, 0.82);
       cursor: pointer;
+      transition:
+        min-height 220ms ease,
+        width 220ms ease,
+        min-width 220ms ease,
+        padding 220ms ease,
+        font-size 220ms ease,
+        border-width 220ms ease,
+        box-shadow 220ms ease,
+        transform 120ms ease;
     }
 
     .gold-button:active {
@@ -278,14 +280,74 @@
       stroke: #211500;
       stroke-width: 3;
       fill: none;
+      transition:
+        width 220ms ease,
+        height 220ms ease;
     }
 
     .player-mode-button {
-      min-width: 142px;
+      min-width: 156px;
       min-height: 52px;
       padding: 0 16px;
       font-size: 15px;
       white-space: nowrap;
+    }
+
+    .game-dashboard.one-player {
+      grid-template-rows: 112px minmax(0, 1fr);
+    }
+
+    .game-dashboard.one-player .control-bar {
+      top: max(7px, env(safe-area-inset-top));
+      left: max(10px, env(safe-area-inset-left));
+      grid-template-columns: 84px 116px 72px;
+      grid-template-rows: 34px 40px;
+      gap: 6px;
+    }
+
+    .game-dashboard.one-player .gold-button:not(.player-mode-button) {
+      min-height: 32px;
+      padding: 0 8px;
+      border-width: 1px;
+      font-size: 10.5px;
+      line-height: 1;
+      box-shadow:
+        0 3px 0 var(--gold-dark),
+        0 7px 13px rgba(0, 0, 0, 0.34),
+        inset 0 1px 0 rgba(255, 255, 255, 0.78);
+    }
+
+    .game-dashboard.one-player .gold-button:not(.player-mode-button):active {
+      transform: translateY(2px);
+      box-shadow:
+        0 1px 0 var(--gold-dark),
+        0 5px 10px rgba(0, 0, 0, 0.32),
+        inset 0 1px 0 rgba(255, 255, 255, 0.72);
+    }
+
+    .game-dashboard.one-player .mode-controls {
+      gap: 6px;
+    }
+
+    .game-dashboard.one-player .fullscreen-button {
+      width: 38px;
+      min-width: 38px;
+      min-height: 34px;
+      padding: 0;
+    }
+
+    .game-dashboard.one-player .fullscreen-button svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .game-dashboard.one-player .timer-shell {
+      top: 2px;
+      width: 314px;
+    }
+
+    .game-dashboard.one-player .timer-readout {
+      font-size: 39px;
     }
 
     .timer-shell {
@@ -296,6 +358,10 @@
       aspect-ratio: 1260 / 533;
       transform: translateX(-50%);
       filter: drop-shadow(0 14px 22px rgba(0, 0, 0, 0.58));
+      transition:
+        top 220ms ease,
+        width 220ms ease,
+        filter 220ms ease;
     }
 
     .timer-shell img {
@@ -324,6 +390,7 @@
         0 0 12px rgba(129, 241, 237, 0.8),
         0 2px 0 #000;
       font-variant-numeric: tabular-nums;
+      transition: font-size 220ms ease;
     }
 
     .players {
@@ -333,7 +400,11 @@
       grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
       gap: 14px;
       min-height: 0;
-      padding: 0 16px 16px;
+      padding:
+        0
+        max(16px, env(safe-area-inset-right))
+        calc(16px + env(safe-area-inset-bottom))
+        max(16px, env(safe-area-inset-left));
       transition:
         grid-template-columns 220ms ease,
         gap 220ms ease,
@@ -342,7 +413,11 @@
 
     .game-dashboard.one-player .players {
       grid-template-columns: minmax(0, 1fr);
-      padding: 0 32px 16px;
+      padding:
+        0
+        max(32px, env(safe-area-inset-right))
+        calc(16px + env(safe-area-inset-bottom))
+        max(32px, env(safe-area-inset-left));
     }
 
     .game-dashboard.one-player #playerTwo {
@@ -898,7 +973,7 @@
               <path d="M5 13V5h8M19 5h8v8M27 19v8h-8M13 27H5v-8"></path>
             </svg>
           </button>
-          <button class="gold-button player-mode-button" id="playerModeBtn" type="button" aria-pressed="false">ONE PLAYER</button>
+          <button class="gold-button player-mode-button" id="playerModeBtn" type="button" aria-pressed="false">ONE PLAYER MODE</button>
         </div>
       </div>
       <div class="timer-shell" aria-label="Timer">
@@ -1081,6 +1156,8 @@
       preloadAssets();
       panels.forEach((panel) => loadSection(panel, 0));
       initPasswordGate();
+      initInstallSupport();
+      lockViewportGestures();
       animateDashboardStars();
       updateTimerReadout();
       updatePauseButton();
@@ -1104,6 +1181,9 @@
       window.addEventListener("resize", () => {
         activePanels().forEach(layoutPanel);
         resizeCelebrationCanvas();
+      });
+      window.addEventListener("orientationchange", () => {
+        scheduleFrame(() => activePanels().forEach(layoutPanel));
       });
 
       const resizeObserver = new SafeResizeObserver((entries) => {
@@ -1428,8 +1508,47 @@
 
       function updatePlayerModeButton() {
         const onePlayer = state.playerMode === "one";
-        playerModeBtn.textContent = onePlayer ? "TWO PLAYER" : "ONE PLAYER";
+        playerModeBtn.textContent = onePlayer ? "TWO PLAYER MODE" : "ONE PLAYER MODE";
         playerModeBtn.setAttribute("aria-pressed", onePlayer ? "true" : "false");
+      }
+
+      function initInstallSupport() {
+        if ("serviceWorker" in navigator) {
+          window.addEventListener("load", () => {
+            navigator.serviceWorker.register("sw.js").catch(() => {});
+          });
+        }
+
+        updateStandaloneClass();
+        ["(display-mode: fullscreen)", "(display-mode: standalone)"].forEach((query) => {
+          if (!window.matchMedia) return;
+          const mediaQuery = window.matchMedia(query);
+          if (mediaQuery.addEventListener) {
+            mediaQuery.addEventListener("change", updateStandaloneClass);
+          } else if (mediaQuery.addListener) {
+            mediaQuery.addListener(updateStandaloneClass);
+          }
+        });
+      }
+
+      function updateStandaloneClass() {
+        document.documentElement.classList.toggle("standalone", isStandaloneDisplay());
+      }
+
+      function isStandaloneDisplay() {
+        return window.navigator.standalone === true
+          || (window.matchMedia && (
+            window.matchMedia("(display-mode: fullscreen)").matches
+            || window.matchMedia("(display-mode: standalone)").matches
+          ));
+      }
+
+      function lockViewportGestures() {
+        const stopGesture = (event) => preventDefaultIfPossible(event);
+        document.addEventListener("touchmove", stopGesture, { passive: false });
+        document.addEventListener("gesturestart", stopGesture, { passive: false });
+        document.addEventListener("gesturechange", stopGesture, { passive: false });
+        document.addEventListener("gestureend", stopGesture, { passive: false });
       }
 
       function startGame() {
@@ -2038,6 +2157,8 @@
       }
 
       function toggleFullscreen() {
+        if (isStandaloneDisplay()) return;
+
         const target = document.documentElement;
         if (!document.fullscreenElement) {
           if (target.requestFullscreen) target.requestFullscreen();
@@ -2254,21 +2375,5 @@
       };
     })();
   </script>
-  <script>
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker
-      .register('./sw.js')
-      .catch(err => console.log('SW registration failed', err));
-  });
-}
-
-/* detect standalone mode */
-console.log(
-  'Standalone:',
-  window.matchMedia('(display-mode: standalone)').matches ||
-  window.navigator.standalone
-);
-</script>
 </body>
 </html>
