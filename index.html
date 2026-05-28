@@ -341,13 +341,30 @@
       height: 18px;
     }
 
+    .game-dashboard.one-player .player-mode-button {
+      width: 120px;
+      min-width: 120px;
+      min-height: 32px;
+      padding: 0 7px;
+      border-width: 1px;
+      font-size: 9.5px;
+      line-height: 1;
+      box-shadow:
+        0 3px 0 var(--gold-dark),
+        0 7px 13px rgba(0, 0, 0, 0.34),
+        inset 0 1px 0 rgba(255, 255, 255, 0.78);
+    }
+
     .game-dashboard.one-player .timer-shell {
-      top: 2px;
-      width: 314px;
+      top: 0;
+      width: 286px;
     }
 
     .game-dashboard.one-player .timer-readout {
-      font-size: 39px;
+      top: 29%;
+      bottom: 21%;
+      padding-top: 2px;
+      font-size: 35px;
     }
 
     .timer-shell {
@@ -390,7 +407,11 @@
         0 0 12px rgba(129, 241, 237, 0.8),
         0 2px 0 #000;
       font-variant-numeric: tabular-nums;
-      transition: font-size 220ms ease;
+      transition:
+        top 220ms ease,
+        bottom 220ms ease,
+        padding-top 220ms ease,
+        font-size 220ms ease;
     }
 
     .players {
